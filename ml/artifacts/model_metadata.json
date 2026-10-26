@@ -1,0 +1,18 @@
+{
+  "model_type": "RandomForestRegressor",
+  "target": "ride_count",
+  "features": [
+    "pickup_location_id",
+    "hour",
+    "day_of_week",
+    "is_weekend",
+    "lag_1h",
+    "lag_24h",
+    "lag_168h",
+    "rolling_mean_3h",
+    "rolling_mean_24h"
+  ],
+  "train_end": "2025-02-28",
+  "test_start": "2025-03-01",
+  "created_at_utc": "2026-08-25T21:30:39.823006+00:00"
+}

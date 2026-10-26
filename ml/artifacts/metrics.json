@@ -1,0 +1,8 @@
+{
+  "baseline_mae": 7.1067830173192155,
+  "model_mae": 3.572312398702851,
+  "model_rmse": 11.083798997166609,
+  "mae_improvement_percent": 49.73376294172577,
+  "train_rows": 326976,
+  "test_rows": 194928
+}

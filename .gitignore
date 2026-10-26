@@ -1,0 +1,45 @@
+# Credentials and local configuration
+.env
+.env.*
+!.env.example
+.aws/
+*.pem
+*.key
+*credentials*
+
+# Terraform state and generated plans
+**/.terraform/
+**/*.tfstate
+**/*.tfstate.*
+**/*.tfplan
+**/tfplan
+**/terraform.tfvars
+**/terraform.tfvars.json
+**/terraform_plan.txt
+**/data_received_lambda.zip
+
+# Data, models, and generated outputs
+data/
+outputs/
+*.parquet
+*.joblib
+*.pkl
+*.pickle
+*.zip
+*.log
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+
+# Local run payloads and obsolete account-specific notes
+event-pattern.json
+test-event.json
+terraform/execution-input.json
+terraform/workflow-definition.json
+PROJECT_STATUS.md
+AWS_RUNBOOK.md
+.publish-repo/

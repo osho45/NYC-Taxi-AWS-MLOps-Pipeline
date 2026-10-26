@@ -1,0 +1,76 @@
+{
+  "Comment": "Process one monthly NYC Yellow Taxi object through Bronze, Silver, and Gold Glue jobs.",
+  "StartAt": "BronzeIngest",
+  "States": {
+    "BronzeIngest": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun.sync",
+      "Parameters": {
+        "JobName": "${bronze_job_name}",
+        "Arguments": {
+          "--SOURCE_S3_URI.$": "States.Format('s3://{}/{}', $.source_bucket, $.source_key)",
+          "--SOURCE_FILENAME.$": "$.source_filename",
+          "--SOURCE_YEAR.$": "$.source_year",
+          "--SOURCE_MONTH.$": "$.source_month",
+          "--RUN_ID.$": "States.Format('bronze-{}', $.run_id)"
+        }
+      },
+      "TimeoutSeconds": 2400,
+      "Retry": [{
+        "ErrorEquals": ["Glue.ConcurrentRunsExceededException", "Glue.OperationTimeoutException", "Glue.InternalServiceException"],
+        "IntervalSeconds": 20,
+        "MaxAttempts": 3,
+        "BackoffRate": 2
+      }],
+      "Catch": [{"ErrorEquals": ["States.ALL"], "ResultPath": "$.failure", "Next": "PipelineFailed"}],
+      "ResultPath": "$.bronze_run",
+      "Next": "SilverPublish"
+    },
+    "SilverPublish": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun.sync",
+      "Parameters": {
+        "JobName": "${silver_job_name}",
+        "Arguments": {
+          "--SOURCE_YEAR.$": "$.source_year",
+          "--SOURCE_MONTH.$": "$.source_month",
+          "--RUN_ID.$": "States.Format('silver-{}', $.run_id)"
+        }
+      },
+      "TimeoutSeconds": 2400,
+      "Retry": [{
+        "ErrorEquals": ["Glue.ConcurrentRunsExceededException", "Glue.OperationTimeoutException", "Glue.InternalServiceException"],
+        "IntervalSeconds": 20,
+        "MaxAttempts": 3,
+        "BackoffRate": 2
+      }],
+      "Catch": [{"ErrorEquals": ["States.ALL"], "ResultPath": "$.failure", "Next": "PipelineFailed"}],
+      "ResultPath": "$.silver_run",
+      "Next": "GoldBuild"
+    },
+    "GoldBuild": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun.sync",
+      "Parameters": {
+        "JobName": "${gold_job_name}",
+        "Arguments": {
+          "--SOURCE_YEAR.$": "$.source_year",
+          "--SOURCE_MONTH.$": "$.source_month",
+          "--RUN_ID.$": "States.Format('gold-{}', $.run_id)"
+        }
+      },
+      "TimeoutSeconds": 2400,
+      "Retry": [{
+        "ErrorEquals": ["Glue.ConcurrentRunsExceededException", "Glue.OperationTimeoutException", "Glue.InternalServiceException"],
+        "IntervalSeconds": 20,
+        "MaxAttempts": 3,
+        "BackoffRate": 2
+      }],
+      "Catch": [{"ErrorEquals": ["States.ALL"], "ResultPath": "$.failure", "Next": "PipelineFailed"}],
+      "ResultPath": "$.gold_run",
+      "Next": "PipelineSucceeded"
+    },
+    "PipelineSucceeded": {"Type": "Succeed"},
+    "PipelineFailed": {"Type": "Fail", "ErrorPath": "$.failure.Error", "CausePath": "$.failure.Cause"}
+  }
+}

@@ -1,0 +1,6 @@
+aws_region            = "us-east-1"
+project_name          = "nyc-taxi-ml"
+environment           = "class"
+force_destroy_buckets = true
+enable_step_functions = false
+upload_model_artifacts = false

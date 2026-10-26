@@ -1,0 +1,72 @@
+nyc_taxi_medallion:
+  dag_id: nyc_taxi_medallion
+
+  params:
+    source_bucket: ""
+    source_key: ""
+    source_filename: ""
+    source_year: ""
+    source_month: ""
+    run_id: ""
+
+  max_active_runs: 17
+  catchup: false
+
+  tasks:
+    bronze_ingest:
+      operator: airflow.providers.amazon.aws.operators.glue.GlueJobOperator
+      task_id: bronze_ingest
+      retries: 0
+
+      job_name: ${bronze_job_name}
+      wait_for_completion: true
+      verbose: true
+      update_config: false
+      stop_job_run_on_kill: true
+
+      script_args:
+        "--SOURCE_S3_URI": "s3://{{ params.source_bucket }}/{{ params.source_key }}"
+        "--SOURCE_FILENAME": "{{ params.source_filename }}"
+        "--SOURCE_YEAR": "{{ params.source_year }}"
+        "--SOURCE_MONTH": "{{ params.source_month }}"
+        "--RUN_ID": "bronze-{{ params.run_id }}"
+
+      dependencies: []
+
+    silver_publish:
+      operator: airflow.providers.amazon.aws.operators.glue.GlueJobOperator
+      task_id: silver_publish
+      retries: 0
+
+      job_name: ${silver_job_name}
+      wait_for_completion: true
+      verbose: true
+      update_config: false
+      stop_job_run_on_kill: true
+
+      script_args:
+        "--SOURCE_YEAR": "{{ params.source_year }}"
+        "--SOURCE_MONTH": "{{ params.source_month }}"
+        "--RUN_ID": "silver-{{ params.run_id }}"
+
+      dependencies:
+        - bronze_ingest
+
+    gold_build:
+      operator: airflow.providers.amazon.aws.operators.glue.GlueJobOperator
+      task_id: gold_build
+      retries: 0
+
+      job_name: ${gold_job_name}
+      wait_for_completion: true
+      verbose: true
+      update_config: false
+      stop_job_run_on_kill: true
+
+      script_args:
+        "--SOURCE_YEAR": "{{ params.source_year }}"
+        "--SOURCE_MONTH": "{{ params.source_month }}"
+        "--RUN_ID": "gold-{{ params.run_id }}"
+
+      dependencies:
+        - silver_publish

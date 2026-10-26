@@ -1,0 +1,6 @@
+# Local Terraform plans may include resource identifiers and sensitive values.
+tfplan
+*.tfplan
+step-functions-review.tfplan
+terraform_plan.txt
+data_received_lambda.zip
